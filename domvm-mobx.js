@@ -5,6 +5,8 @@
 
 // UTILS:
 
+function noop() {}
+
 // We want the same checks as domvm:
 function isPlainObj(val) {	// See: https://github.com/domvm/domvm/blob/master/src/utils.js#L17
 	return val != undefined && val.constructor === Object;		//  && typeof val === "object"
@@ -23,11 +25,12 @@ function isFunc(val) {	// See: https://github.com/domvm/domvm/blob/master/src/ut
 // schedules an async redraw of the vm (the user can setup its own becomeStale() hook to change
 // the default behavior).
 // Lazy rendering: re-rendering is executed only when the observer is stale, which is checked by
-// its diff() function. (Rendering can be forced by the user diff() function if setup.)
-// Reaction lifecycle: the Reaction is created at the beginning of the vm init(), and destroyed
-// during willUnmount(), which allows it to be reclaimed by the GC (usual case). But because the vm
-// can be reused, we recreate the Reaction during the render() if we detect that the vm is reused.
-// Conclusion: we need to replace four methods/hooks on every observer vm: diff(), init(), render()
+// its diff.eq() function. (Rendering can be forced by the user diff() function if setup.)
+// Reaction lifecycle: the Reaction is created at the beginning of the first render (ie. just before
+// mounting), and destroyed during willUnmount(), which allows it to be reclaimed by the GC. But
+// because the vm can be reused, we recreate the Reaction during the render() if we detect that
+// the vm is reused.
+// Conclusion: we need to replace four methods/hooks on every observer vm: diff.eq(), init(), render()
 // and willUnmount(). And we also need to add one hook: becomeStale().
 // Notes:
 // - There is no way to know that a vm is being reused before the execution of its diff()
@@ -57,8 +60,8 @@ function initvm(vm, reactionName) {
 		reaction: undefined,
 		// If the current view is stale and need (re-)rendering:
 		stale: true,
-		// The original diff():
-		diff: vm.diff && vm.diff.val,	// Before domvm 3.3.3, it was: vm.diff
+		// The original diff.eq() if any:
+		eq: vm.diff && vm.diff.eq,	// Since domvm 3.4.7
 		// The original render():
 		render: vm.render,
 		// The original hook willUnmount():
@@ -69,11 +72,10 @@ function initvm(vm, reactionName) {
 	// or if he did set it to false:
 	if (hooks.becomeStale == undefined) hooks.becomeStale = becomeStale;
 	
-	vm.config({diff: diff});
+	var valFn = vm.diff ? vm.diff.val : noop;
+	vm.config({diff: {val: valFn, eq: eq}});
 	vm.render = render;
 	hooks.willUnmount = willUnmount;
-	
-	setReaction(vm);
 }
 
 // Creates the observer Reaction:
@@ -112,22 +114,13 @@ function becomeStale(vm) {
 	vm.redraw();
 }
 
-// The diff() assigned to each observer vm:
-function diff(vm) {
-	var observerData = vm.mobxObserver,
-		// Retrieve previous result:
-		vold = vm.node,
-		result = vold ? vold._diff : false;	// Before domvm 3.4.0, it was: vm._diff
+// The diff.eq() assigned to each observer vm:
+function eq(vm) {
+	var observerData = vm.mobxObserver;
 	
-	// We must always execute the diff() function so that it doesn't break future comparisons:
-	if (observerData.diff) result = observerData.diff.apply(this, arguments);
-	
-	if (observerData.stale) {
-		// Force render while keeping the current value for future comparisons.
-		// Note: before domvm 3.4.7, this trick didn't work. See: https://github.com/domvm/domvm/issues/204
-		if (vold) vm.node._diff = !result;	// Before domvm 3.4.0, it was: vm._diff
-	}
-	return result;
+	if (observerData.stale) return false;	// Re-render.
+	else if(observerData.eq) return observerData.eq.apply(this, arguments);	// Let diff() choose.
+	else return true;	// By default: no re-render.
 }
 
 // The render() wrapper assigned to each observer vm:
