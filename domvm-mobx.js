@@ -69,11 +69,12 @@ function initvm(vm, reactionName) {
 	};
 	
 	// The user can prevent the default becomeStale() if he did setup its own function,
-	// or if he did set it to false:
+	// or if he did set it to false (note: this also checks for null because domvm often
+	// uses null as undefined):
 	if (hooks.becomeStale == undefined) hooks.becomeStale = becomeStale;
 	
 	var valFn = vm.diff ? vm.diff.val : noop;
-	vm.config({diff: {val: valFn, eq: eq}});
+	vm.config({diff: {val: valFn, eq: eq}});	// TODO: vm.config() was renamed vm.cfg() in domvm v3.4.7, but domvm.config() was not renamed, so we wait for stabilization.
 	vm.render = render;
 	hooks.willUnmount = willUnmount;
 }

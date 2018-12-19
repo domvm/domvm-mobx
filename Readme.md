@@ -37,7 +37,7 @@ render: function(vm) {
 
 #### Technical explanation:
 
-In normal domvm, it is usually not needed to key the sub-views (except for optimizations or when you want to access/modify the generated DOM): if you don't use keys, domvm will reuse the wrong vm but as it will completely redraw it, you still get the correct result. On the other hand, with unkeyed reactive sub-views, when domvm reuses the wrong `vm`, the `vm` can't know that it is being reused, so it skips the redrawing because it is not stale.
+In normal domvm, it is usually not needed to key the sub-views (except for optimizations or when you want to access/modify the generated DOM): if you don't use keys, domvm will reuse the wrong `vm` but as it will completely redraw it, you still get the correct result. On the other hand, with unkeyed reactive sub-views, the `vm` won't redraw if it is not stale, and thus it will keep its obsolete state without knowing that it has been reused.
 
 ## Simple example
 
@@ -52,13 +52,13 @@ var el = domvm.defineElement,
 var myState = observable({ name: "World" });
 
 var MyView = observer(function(vm) {
-    return function() {
+    return function() {  // The render() function
         return el("div", "Hello " + myState.name + "!");
     };
 });
 
 var YourView = observer(function(vm) {
-    return {  // The render() function
+    return {
         render: function() {
             return el("div", "Hello " + myState.name + "!");
         }
@@ -208,7 +208,7 @@ console.log('=> Only the "UsersList" and 1 "User" has been re-rendered.');
 
 
 ## Additional lifecycle hook: `becomeStale(vm, data)`
-This new [lifecycle hook](https://github.com/domvm/domvm#lifecycle-hooks) is called when the observed data has changed. It is responsible for redrawing the `vm`. All reactive views are setup with a default `becomeStale()` hook which schedules an async redraw.
+This new [lifecycle hook](https://github.com/domvm/domvm#lifecycle-hooks) is called when the observed data has changed. It is responsible for redrawing the `vm`. Thus by default, all reactive views are setup with a default `becomeStale()` hook which schedules an async redraw.
 
 So if you want to change the default behavior, you can either set it to false to disable it or to your own function to replace the default hook. You are then responsible for scheduling the redraw.
 
@@ -232,8 +232,8 @@ If you hesitate between a bit smaller or a bit larger, it is usually better to m
 ### How to pass observable data ?
 
 Remember that only the _properties_ are observable, not the _values_. So you must always [dereference the values](https://mobx.js.org/best/pitfalls.html#dereference-values-as-late-as-possible) _inside_ your view's `render()` method.  
-And obviously, reactive views [only track data that is accessed during the `render()` method](https://mobx.js.org/best/pitfalls.html#don-t-copy-observables-properties-and-store-them-locally).  
+And obviously, reactive views [only track data that is accessed _during_ the `render()` method](https://mobx.js.org/best/pitfalls.html#don-t-copy-observables-properties-and-store-them-locally).  
 Other than that, there is no difference from a normal domvm view.
 
 ### Can I use a `diff()` function ?
-In general a [`diff()`](https://github.com/domvm/domvm#view-change-assessment) function should be avoided as MobX will efficiently manage redraws by itself. But if you want to force a redraw while the observer is not stale, you can provide your `diff()` function. That function will always be executed as expected, but it won't prevent the redraws when the observer is stale.
+In general a [`diff()`](https://github.com/domvm/domvm#view-change-assessment) function should be avoided as MobX will efficiently manage redraws by itself. You can still provide your `diff()` function if you want to force a re-render while the observer is not stale. But when it is stale, it is always re-rendered, whatever the `diff()` function returns.
