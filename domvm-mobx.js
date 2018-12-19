@@ -1,4 +1,4 @@
-/*! domvm-MobX v0.0 - Jean-Louis Grall - MIT License - https://github.com/jlgrall/domvm-mobx */
+/*! domvm-MobX v0.0 - MIT License - https://github.com/domvm/domvm-mobx */
 (function(domvm, mobx, undefined) {
 "use strict";
 
