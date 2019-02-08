@@ -21,8 +21,8 @@ function isFunc(val) {	// See: https://github.com/domvm/domvm/blob/3.4.8/src/uti
 // 
 // We create a new MobX Reaction for each observer domvm vm (ViewModel).
 // The Reaction is used to track the observables used by the render() method. It becomes stale
-// when one of the tracked observables changes. Upon becoming stale, the default becomeStale() hook
-// schedules an async redraw of the vm (the user can setup its own becomeStale() hook to change
+// when one of the tracked observables changes. Upon becoming stale, the default becameStale() hook
+// schedules an async redraw of the vm (the user can setup its own becameStale() hook to change
 // the default behavior).
 // Lazy rendering: re-rendering is executed only when the observer is stale, which is checked by
 // its diff.eq() function. (Rendering can be forced by the user diff() function if setup.)
@@ -31,7 +31,7 @@ function isFunc(val) {	// See: https://github.com/domvm/domvm/blob/3.4.8/src/uti
 // because the vm can be reused, we recreate the Reaction during the render() if we detect that
 // the vm is reused.
 // Conclusion: we need to replace four methods/hooks on every observer vm: diff.eq(), init(), render()
-// and willUnmount(). And we also need to add one hook: becomeStale().
+// and willUnmount(). And we also need to add one hook: becameStale().
 // Notes:
 // - There is no way to know that a vm is being reused before the execution of its diff()
 //	 method (the willMount() hook is fired after the diff() and the render() methods).
@@ -68,10 +68,10 @@ function initvm(vm, reactionName) {
 		willUnmount: hooks.willUnmount,
 	};
 	
-	// The user can prevent the default becomeStale() if he did setup its own function,
+	// The user can prevent the default becameStale() if he did setup its own function,
 	// or if he did set it to false (note: this also checks for null because domvm often
 	// uses null for undefined):
-	if (hooks.becomeStale == undefined) hooks.becomeStale = becomeStale;
+	if (hooks.becameStale == undefined) hooks.becameStale = becameStale;
 	
 	var valFn = vm.diff ? vm.diff.val : noop;
 	vm.config({diff: {val: valFn, eq: eq}});	// "vm.config()" has an alias "vm.cfg()" since domvm v3.4.7
@@ -89,12 +89,12 @@ function setReaction(vm) {
 	observerData.stale = true;
 	observerData.reaction = new mobx.Reaction(observerData.name, function() {
 		observerData.stale = true;
-		if (vm.hooks.becomeStale) vm.hooks.becomeStale(vm, vm.data);
+		if (vm.hooks.becameStale) vm.hooks.becameStale(vm, vm.data);
 	});
 	
 	// The reaction should be started right after creation. (See: https://github.com/mobxjs/mobx/blob/5.6.0/src/core/reaction.ts#L35)
 	// But it doesn't seem to be mandatory... ?
-	// Not doing it, as that would trigger becomeStale() and a vm.redraw() right now !
+	// Not doing it, as that would trigger becameStale() and a vm.redraw() right now !
 	// In case we need it, see convoluted implementation of fireImmediately in MobX autorun(): https://github.com/mobxjs/mobx/blob/5.6.0/src/api/autorun.ts#L146
 	//observerData.reaction.schedule();
 }
@@ -110,8 +110,8 @@ function unsetReaction(vm) {
 	observerData.reaction = undefined;
 }
 
-// The default becomeStale() assigned to each observer vm's hooks
-function becomeStale(vm) {
+// The default becameStale() assigned to each observer vm's hooks
+function becameStale(vm) {
 	vm.redraw();
 }
 

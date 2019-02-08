@@ -207,8 +207,8 @@ console.log('=> Only the "UsersList" and 1 "User" has been re-rendered.');
 ```
 
 
-## Additional lifecycle hook: `becomeStale(vm, data)`
-This new [lifecycle hook](https://github.com/domvm/domvm#lifecycle-hooks) is called when the observed data has changed. It is responsible for redrawing the `vm`. Thus by default, all reactive views are setup with a default `becomeStale()` hook which schedules an async redraw.
+## Additional lifecycle hook: `becameStale(vm, data)`
+This new [lifecycle hook](https://github.com/domvm/domvm#lifecycle-hooks) is called when the observed data has changed. It is responsible for redrawing the `vm`. Thus by default, all reactive views are setup with a default `becameStale()` hook which schedules an async redraw.
 
 So if you want to change the default behavior, you can either set it to false to disable it or to your own function to replace the default hook. You are then responsible for scheduling the redraw.
 
