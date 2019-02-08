@@ -90,7 +90,7 @@ var el = domvm.defineElement,
     observable = mobx.observable,
     action = mobx.action;
 
-// Use synchronous redraws to follow changes in realtime:
+// Use synchronous redraws to follow changes in realtime in your browser's console:
 domvm.config({ syncRedraw: true });
 
 var appState = observable({

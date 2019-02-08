@@ -8,10 +8,10 @@
 function noop() {}
 
 // We want the same checks as domvm:
-function isPlainObj(val) {	// See: https://github.com/domvm/domvm/blob/master/src/utils.js#L17
-	return val != undefined && val.constructor === Object;		//  && typeof val === "object"
+function isPlainObj(val) {	// See: https://github.com/domvm/domvm/blob/3.4.8/src/utils.js#L13
+	return val != undefined && val.constructor === Object;		// && typeof val === "object"
 }
-function isFunc(val) {	// See: https://github.com/domvm/domvm/blob/master/src/utils.js#L30
+function isFunc(val) {	// See: https://github.com/domvm/domvm/blob/3.4.8/src/utils.js#L26
 	return typeof val === "function";
 }
 
@@ -34,16 +34,16 @@ function isFunc(val) {	// See: https://github.com/domvm/domvm/blob/master/src/ut
 // and willUnmount(). And we also need to add one hook: becomeStale().
 // Notes:
 // - There is no way to know that a vm is being reused before the execution of its diff()
-//   method (the willMount() hook is fired after the diff() and the render() methods).
+//	 method (the willMount() hook is fired after the diff() and the render() methods).
 // - The Reaction must be destroyed explicitly to prevent wasting computations and resources.
 // 
 // Links:
 // - domvm ViewModel: https://github.com/domvm/domvm/blob/master/src/view/ViewModel.js
 // - MobX Reaction: https://github.com/mobxjs/mobx/blob/5.6.0/src/core/reaction.ts
 // - Inspirations:
-//   - MobX bindings for Inferno: https://github.com/infernojs/inferno/blob/dev/packages/inferno-mobx/src/observer.ts
-//   - mobx-observer (universal bindings): https://github.com/capaj/mobx-observer/blob/master/observer.js
-//   - MobX bindings for Preact: https://github.com/mobxjs/mobx-preact
+//	 - MobX bindings for Inferno: https://github.com/infernojs/inferno/blob/master/packages/inferno-mobx/src/observer.ts
+//	 - mobx-observer (universal bindings): https://github.com/capaj/mobx-observer/blob/master/observer.js
+//	 - MobX bindings for Preact: https://github.com/mobxjs/mobx-preact
 
 
 // Turns a vm into an observer (ie. into a reactive view vm):
@@ -70,11 +70,11 @@ function initvm(vm, reactionName) {
 	
 	// The user can prevent the default becomeStale() if he did setup its own function,
 	// or if he did set it to false (note: this also checks for null because domvm often
-	// uses null as undefined):
+	// uses null for undefined):
 	if (hooks.becomeStale == undefined) hooks.becomeStale = becomeStale;
 	
 	var valFn = vm.diff ? vm.diff.val : noop;
-	vm.config({diff: {val: valFn, eq: eq}});	// TODO: vm.config() was renamed vm.cfg() in domvm v3.4.7, but domvm.config() was not renamed, so we wait for stabilization.
+	vm.config({diff: {val: valFn, eq: eq}});	// "vm.config()" has an alias "vm.cfg()" since domvm v3.4.7
 	vm.render = render;
 	hooks.willUnmount = willUnmount;
 }
@@ -120,7 +120,7 @@ function eq(vm) {
 	var observerData = vm.mobxObserver;
 	
 	if (observerData.stale) return false;	// Re-render.
-	else if(observerData.eq) return observerData.eq.apply(this, arguments);	// Let diff() choose.
+	else if(observerData.eq) return observerData.eq.apply(this, arguments); // Let diff() choose.
 	else return true;	// By default: no re-render.
 }
 
@@ -178,14 +178,15 @@ function observer(view) {
 	var reactionName = view.displayName || view.name || (view.constructor && (view.constructor.displayName || view.constructor.name)) || '<View>';
 	reactionName += ".render()";
 	// TODO: maybe we could also pass the name as the optional first parameter ?
-	//       (Like in mobx.action(), see: https://mobx.js.org/refguide/api.html#actions)
+	//		 (Like in mobx.action(), see: https://mobx.js.org/refguide/api.html#actions)
+	//		 That could replace the current reactionName generation which gives poor results in real life code.
 	
 	
 	// We need to hook into the init() of the vm, before that init() is executed, but after
 	// all the vm.config(...) have been executed on the vm (because they can change the init()).
 	// This is a bit complex depending on the type of the view.
 	// Refer to the ViewModel constructor for details:
-	//   https://github.com/domvm/domvm/blob/master/src/view/ViewModel.js#L22
+	//	 https://github.com/domvm/domvm/blob/3.4.8/src/view/ViewModel.js#L48
 	
 	if (isPlainObj(view)) {
 		// view is an object: just set our own init on it.
