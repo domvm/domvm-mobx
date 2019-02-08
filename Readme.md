@@ -8,11 +8,11 @@ A reactive view (or an observer view) tracks which observables are used by `rend
 
 The greatest benefit is that you don't need to manage the redrawings manually. Another benefit is that it reduces the redrawing time when only parts of the page are updated. In most cases this is not noticeable, as domvm is already pretty fast. But it is nice when you have to frequently update small parts of a page.
 
-Size: 0.7k minified + gzipped.
+Size: 0.8k minified + gzipped.
 
 ### Compatibility  
 
-domvm 3.4.7+  
+domvm 3.4.8+  
 Should work with MobX 4.5+ and 5.5+ (No idea about older versions)  
 Only tested with MobX 5.5+  
 IE 9+  

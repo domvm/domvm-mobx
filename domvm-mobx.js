@@ -217,6 +217,43 @@ function observer(view) {
 }
 
 
+// Hook into domvm's redrawing to ensure all staled observers are correctly redrawn.
+// Fixes issue #2: Redraw bug with domvm's drainQueue() (https://github.com/domvm/domvm-mobx/issues/2)
+// In domvm, preventing a parent from re-rendering also prevents all its children.
+// But with domvm-MobX we need discrete re-rendering, so we need to ensure that the children
+// are actually re-rendered, even when their parents aren't.
+// This hook requires domvm v3.4.8
+domvm.config({
+	didRedraws: function forceRedrawOfStaledObservers(redrawQueue) {
+		// We want to redraw the children after the parents, so we sort them by depth:
+		var byDepth = [];
+		
+		// Sorting:
+		redrawQueue.forEach(function(vm) {
+			// Only keep staled domvm-mobx observers (and check they were not unmounted)
+			if (vm.mobxObserver && vm.mobxObserver.stale && vm.node != null) {
+				var depth = 0,
+					parVm = vm;
+				while (parVm = parVm.parent()) depth++;
+			
+				if (!byDepth[depth]) byDepth[depth] = [];
+				byDepth[depth].push(vm);
+			}
+		});
+		
+		// Re-rendering in order:
+		for (var d = 0; d < byDepth.length; d++) {
+			if (byDepth[d]) {
+				byDepth[d].forEach(function(vm) {
+					// May have been redrawn or unmounted by a parent in the meanwhile:
+					if (vm.mobxObserver.stale && vm.node != null) vm.redraw(true);
+				});
+			}
+		}
+	}
+});
+
+
 
 // EXPORTS:
 
