@@ -173,13 +173,17 @@ function wrapInitOnce(target, reactionName) {
 }
 
 // Turns a view into a domvm-MobX observer view:
-function observer(view) {
-	// Generate friendly name for debugging (See: https://github.com/infernojs/inferno/blob/dev/packages/inferno-mobx/src/observer.ts#L104)
-	var reactionName = view.displayName || view.name || (view.constructor && (view.constructor.displayName || view.constructor.name)) || '<View>';
-	reactionName += ".render()";
-	// TODO: maybe we could also pass the name as the optional first parameter ?
-	//		 (Like in mobx.action(), see: https://mobx.js.org/refguide/api.html#actions)
-	//		 That could replace the current reactionName generation which gives poor results in real life code.
+function observer(name, view) {
+	// If no name provided for the observer:
+	if (view === undefined) {
+		view = name;
+		
+		// Generate friendly name for debugging (See: https://github.com/infernojs/inferno/blob/master/packages/inferno-mobx/src/observer.ts#L105)
+		name = view.displayName || view.name || (view.constructor && (view.constructor.displayName || view.constructor.name)) || '<View>';
+	}
+	
+	// The name for the MobX Reaction, for debugging:
+	var reactionName = name + ".render()";
 	
 	
 	// We need to hook into the init() of the vm, before that init() is executed, but after

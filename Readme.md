@@ -2,9 +2,9 @@
 
 [MobX](https://mobx.js.org/) bindings for [domvm](https://github.com/domvm/domvm).
 
-Provides an `observer()` function which turns domvm views into _reactive views_ (or _observer views_).
+Provides an `observer(name?, view)` function which turns a domvm view into _reactive view_ (or _observer view_).
 
-A _reactive view_ tracks which MobX observables are used by the view's `render()` method and redraws itself automatically when one of these values changes, making the view stale. It also prevents unnecessary redrawings as long as it is not stale.
+A _reactive view_ tracks which MobX observables are used by the view's `render()` method and redraws itself automatically when it becomes stale as a result of a change to these observables. It also prevents unnecessary redrawings as long as it is not stale.
 
 Benefits:
 - no more imperative redraw code (forget about `vm.redraw()`), your views are never stale.
@@ -50,6 +50,21 @@ render: function(vm) {
 
 In normal domvm, it is usually not needed to key the sub-views (except for optimizations or when you want to access/modify the generated DOM): if you don't use keys, domvm will reuse the wrong `vm` but as it will completely redraw it, you still get the correct result. On the other hand, with reactive sub-views, an unkeyed `vm` doesn't know when it is being reused for another `vm`, and it may actively prevent being re-rendered, resulting in a stale situation.
 
+### Naming your observers for debugging
+
+Set the name as the first parameter: `observer(name?, view)`  
+And debug with a call to [`mobx.trace()`](https://mobx.js.org/best/trace.html) inside your view's `render()` method.
+
+Alternatively, the name can be automatically inferred from the view if it is a named function, or if it is a plain object with a `name` property. So these are equivalent:
+```javascript
+// Explicit names:
+observer("MyView", function(vm) {…});
+observer("MyView", {render: function(vm) {…}});
+
+// Inferred names:
+observer(function MyView(vm) {…});
+observer({name: "MyView", render: function(vm) {…}});
+```
 
 ### Additional lifecycle hook: `becameStale(vm, data)`
 
@@ -73,13 +88,13 @@ var myState = observable({ name: "World" });
 
 // Three equivalent views with the same render() method:
 
-var MyView = observer(function(vm) {
+var MyView = observer("MyView", function(vm) {
     return function() {  // The render() function
         return el("div", "Hello " + myState.name + "!");
     };
 });
 
-var YourView = observer(function(vm) {
+var YourView = observer(function YourView(vm) {
     return {
         render: function() {
             return el("div", "Hello " + myState.name + "!");
@@ -87,7 +102,7 @@ var YourView = observer(function(vm) {
     };
 });
 
-var SomeView = observer({
+var SomeView = observer("SomeView", {
     render: function() {
         return el("div", "Hello " + myState.name + "!");
     }
