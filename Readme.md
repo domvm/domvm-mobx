@@ -2,7 +2,7 @@
 
 [MobX](https://mobx.js.org/) bindings for [domvm](https://github.com/domvm/domvm).
 
-Provides an `observer(name?, view)` function which turns a domvm view into _reactive view_ (or _observer view_).
+Provides an `observer()` function which turns a domvm view into _reactive view_ (or _observer view_).
 
 A _reactive view_ tracks which MobX observables are used by the view's `render()` method and redraws itself automatically when it becomes stale as a result of a change to these observables. It also prevents unnecessary redrawings as long as it is not stale.
 
@@ -21,12 +21,63 @@ Recommended for projects with:
 - multiple persons working on the same project, to prevent synchronization mistakes and staling views.
 - a page with many elements but small and frequent redraws.
 
-### Compatibility  
+### Requirements
 
-domvm 3.4.8+  
-Should work with MobX 4.5+ and 5.5+ (No idea about older versions)  
-Only tested with MobX 5.5+  
-IE 9+  
+- [domvm](https://github.com/domvm/domvm) 3.4.8+
+- [MobX](https://mobx.js.org/) 4.5+ or 5.5+ (May also work with older versions)
+- IE 9+
+
+
+## **Usage: `observer(name?, view)`**
+- `name` [string]: optional name for debugging
+- `view` [function/plainObject]: your domvm view definition. Any kind of domvm [view](https://github.com/domvm/domvm#views) is accepted.
+
+
+### Simple example
+
+```javascript
+var el = domvm.defineElement,
+    observable = mobx.observable,
+    // The observer() function is exposed on domvm:
+    observer = domvm.mobxObserver;
+
+// A MobX store:
+var myState = observable({ name: "World" });
+
+// Three equivalent views with the same render() method:
+
+var MyView = observer("MyView", function(vm) {
+    return function() {  // The render() function
+        return el("div", "Hello " + myState.name + "!");
+    };
+});
+
+var YourView = observer(function YourView(vm) {
+    return {
+        render: function() {
+            return el("div", "Hello " + myState.name + "!");
+        }
+    };
+});
+
+var SomeView = observer("SomeView", {
+    render: function() {
+        return el("div", "Hello " + myState.name + "!");
+    }
+});
+
+// This will display: "Hello World!"
+var myView = domvm.createView(MyView, myState).mount(document.body);
+
+// This will redraw and display: "Hello everyone!"
+myState.name = "everyone";
+```
+
+
+### Complete demo
+
+Try the online [domvm-MobX demo in the playground](https://domvm.github.io/domvm/demos/playground/#mobx)
+
 
 ### Keying views /!\ IMPORTANT /!\
 
@@ -71,54 +122,6 @@ observer({name: "MyView", render: function(vm) {…}});
 This new [lifecycle hook](https://github.com/domvm/domvm#lifecycle-hooks) is called when the observed data has changed. It is responsible for redrawing the `vm`. Thus by default, all reactive views are setup with a default `becameStale()` hook which schedules an async redraw.
 
 So if you want to change the default behavior, you can either set it to false to disable it or to your own function to replace the default hook. You are then responsible for scheduling the redraw.
-
-
-
-## Simple example
-
-The `observer()` function accepts all the 3 different ways that views can be defined with domvm. This example shows that by using the 3 different ways for the 3 different views:
-
-```javascript
-var el = domvm.defineElement,
-    observable = mobx.observable,
-    // The observer() function is exposed on domvm:
-    observer = domvm.mobxObserver;
-
-var myState = observable({ name: "World" });
-
-// Three equivalent views with the same render() method:
-
-var MyView = observer("MyView", function(vm) {
-    return function() {  // The render() function
-        return el("div", "Hello " + myState.name + "!");
-    };
-});
-
-var YourView = observer(function YourView(vm) {
-    return {
-        render: function() {
-            return el("div", "Hello " + myState.name + "!");
-        }
-    };
-});
-
-var SomeView = observer("SomeView", {
-    render: function() {
-        return el("div", "Hello " + myState.name + "!");
-    }
-});
-
-// This will display: "Hello World!"
-var myView = domvm.createView(MyView, myState).mount(document.body);
-
-// This will redraw and display: "Hello everyone!"
-myState.name = "everyone";
-```
-
-
-## Complete demo
-
-Try the online [domvm-MobX demo in the playground](https://domvm.github.io/domvm/demos/playground/#mobx)
 
 
 ## FAQ
