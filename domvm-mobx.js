@@ -157,8 +157,8 @@ function willUnmount(vm) {
 function wrapInit(target, reactionName) {
 	target.init = (function(init) {
 		return function(vm) {
-			initvm(vm, reactionName);
 			if (init) init.apply(this, arguments);
+			initvm(vm, reactionName);
 		};
 	})(target.init);
 }
@@ -185,8 +185,8 @@ function observer(name, view) {
 	var reactionName = name + ".render()";
 	
 	
-	// We need to hook into the init() of the vm, before that init() is executed, but after
-	// all the vm.config(...) have been executed on the vm (because they can change the init()).
+	// We need to hook into the init() of the vm, just after that init() is executed,
+	// so that all the vm.config(...) have been executed on the vm.
 	// This is a bit complex depending on the type of the view.
 	// Refer to the ViewModel constructor for details:
 	//	 https://github.com/domvm/domvm/blob/3.4.8/src/view/ViewModel.js#L48
