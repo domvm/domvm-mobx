@@ -139,3 +139,9 @@ Other than that, there is no difference from a normal domvm view.
 
 ### Can I use a `diff()` function ?
 In general a [`diff()`](https://github.com/domvm/domvm#view-change-assessment) function should be avoided as MobX will efficiently manage redraws by itself. You can still provide your `diff()` function if you want to force a re-render while the observer is not stale. But when it is stale, it is always re-rendered, whatever your `diff()` function returns.
+
+
+## Changelog
+
+- __v1.0__ _(12 Feb. 2019)_:
+  - Initial version
