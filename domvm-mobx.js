@@ -71,7 +71,8 @@ function initvm(vm, reactionName) {
 	// The user can prevent the default becameStale() if he did setup its own function,
 	// or if he did set it to false (note: this also checks for null because domvm often
 	// uses null for undefined):
-	if (hooks.becameStale == undefined) hooks.becameStale = becameStale;
+	if (hooks.becameStale == undefined)
+		hooks.becameStale = becameStale;
 	
 	var valFn = vm.diff ? vm.diff.val : noop;
 	vm.config({diff: {val: valFn, eq: eq}});	// "vm.config()" has an alias "vm.cfg()" since domvm v3.4.7
@@ -84,12 +85,14 @@ function setReaction(vm) {
 	var observerData = vm._mobxObserver;
 	
 	// Useful during development:
-	if (observerData.reaction) throw Error("Reaction already set.");
+	if (observerData.reaction)
+		throw Error("Reaction already set.");
 	
 	observerData.stale = true;
 	observerData.reaction = new mobx.Reaction(observerData.name, function() {
 		observerData.stale = true;
-		if (vm.hooks.becameStale) vm.hooks.becameStale(vm, vm.data);
+		if (vm.hooks.becameStale)
+			vm.hooks.becameStale(vm, vm.data);
 	});
 	
 	// The reaction should be started right after creation. (See: https://github.com/mobxjs/mobx/blob/5.6.0/src/core/reaction.ts#L35)
@@ -104,7 +107,8 @@ function unsetReaction(vm) {
 	var observerData = vm._mobxObserver;
 	
 	// Useful during development:
-	if (!observerData.reaction) throw Error("Reaction already unset.");
+	if (!observerData.reaction)
+		throw Error("Reaction already unset.");
 	
 	observerData.reaction.dispose();
 	observerData.reaction = undefined;
@@ -119,9 +123,12 @@ function becameStale(vm) {
 function eq(vm) {
 	var observerData = vm._mobxObserver;
 	
-	if (observerData.stale) return false;	// Re-render.
-	else if(observerData.eq) return observerData.eq.apply(this, arguments); // Let diff() choose.
-	else return true;	// By default: no re-render.
+	if (observerData.stale)
+		return false;	// Re-render.
+	else if (observerData.eq)
+		return observerData.eq.apply(this, arguments); // Let diff() choose.
+	else
+		return true;	// By default: no re-render.
 }
 
 // The render() wrapper assigned to each observer vm:
@@ -132,9 +139,10 @@ function render(vm) {
 		result;
 	
 	// If vm was unmounted and is now being reused:
-	if (!observerData.reaction) setReaction(vm);
+	if (!observerData.reaction)
+		setReaction(vm);
 	
-	// This can be run even if the reaction is not stale:
+	// Note: the following is allowed to run by MobX even if the reaction is not stale:
 	observerData.reaction.track(function() {
 		mobx._allowStateChanges(false, function() {
 			result = observerData.render.apply(that, args);
@@ -150,14 +158,16 @@ function willUnmount(vm) {
 	unsetReaction(vm);
 	
 	var _willUnmount = vm._mobxObserver.willUnmount;
-	if (_willUnmount) _willUnmount.apply(this, arguments);
+	if (_willUnmount)
+		_willUnmount.apply(this, arguments);
 }
 
 // Replaces the init() with our own init():
 function wrapInit(target, reactionName) {
 	target.init = (function(init) {
 		return function(vm) {
-			if (init) init.apply(this, arguments);
+			if (init)
+				init.apply(this, arguments);
 			initvm(vm, reactionName);
 		};
 	})(target.init);
@@ -202,9 +212,8 @@ function observer(name, view) {
 			return function(vm) {
 				var out = view.apply(this, arguments);
 				
-				if (isFunc(out)) {
+				if (isFunc(out))
 					wrapInit(vm, reactionName);
-				}
 				else {
 					// In case multiple executions of view() returns the same object,
 					// we want to wrap init only once:
@@ -237,9 +246,11 @@ domvm.config({
 			if (vm._mobxObserver && vm._mobxObserver.stale && vm.node != undefined) {
 				var depth = 0,
 					parVm = vm;
-				while (parVm = parVm.parent()) depth++;
-			
-				if (!byDepth[depth]) byDepth[depth] = [];
+				while (parVm = parVm.parent())
+					depth++;
+				
+				if (!byDepth[depth])
+					byDepth[depth] = [];
 				byDepth[depth].push(vm);
 			}
 		});
@@ -249,7 +260,8 @@ domvm.config({
 			if (byDepth[d]) {
 				byDepth[d].forEach(function(vm) {
 					// May have been redrawn or unmounted by a parent in the meanwhile:
-					if (vm._mobxObserver.stale && vm.node != undefined) vm.redraw(true);
+					if (vm._mobxObserver.stale && vm.node != undefined)
+						vm.redraw(true);
 				});
 			}
 		}
