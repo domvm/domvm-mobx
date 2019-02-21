@@ -234,7 +234,7 @@ domvm.config({
 		// Sorting:
 		redrawQueue.forEach(function(vm) {
 			// Only keep staled domvm-mobx observers (and check they were not unmounted)
-			if (vm._mobxObserver && vm._mobxObserver.stale && vm.node != null) {
+			if (vm._mobxObserver && vm._mobxObserver.stale && vm.node != undefined) {
 				var depth = 0,
 					parVm = vm;
 				while (parVm = parVm.parent()) depth++;
@@ -249,7 +249,7 @@ domvm.config({
 			if (byDepth[d]) {
 				byDepth[d].forEach(function(vm) {
 					// May have been redrawn or unmounted by a parent in the meanwhile:
-					if (vm._mobxObserver.stale && vm.node != null) vm.redraw(true);
+					if (vm._mobxObserver.stale && vm.node != undefined) vm.redraw(true);
 				});
 			}
 		}
