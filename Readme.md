@@ -143,5 +143,7 @@ In general a [`diff()`](https://github.com/domvm/domvm#view-change-assessment) f
 
 ## Changelog
 
+- __v1.0.1__ _(21 Feb. 2019)_:
+  - Code formatting
 - __v1.0__ _(12 Feb. 2019)_:
   - Initial version
